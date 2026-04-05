@@ -1,0 +1,14 @@
+export const TERRAIN_SIZE = 500;
+export const TERRAIN_SEGMENTS = 256;
+export const TERRAIN_SEED = 42;
+export const GRAVITY = 1.6;
+export const ROVER_MAX_SPEED = 20;
+export const ROVER_ACCELERATION = 8;
+export const ROVER_TURN_SPEED = 2.0;
+export const ROVER_FRICTION = 0.97;
+export const ROVER_BRAKE_FRICTION = 0.92;
+export const NETWORK_TICK_RATE = 15;
+export const CRATER_COUNT = 30;
+export const CAMERA_FOLLOW_DISTANCE = 14;
+export const CAMERA_HEIGHT = 7;
+export const CAMERA_DAMPING = 3.0;
