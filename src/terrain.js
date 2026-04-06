@@ -146,15 +146,15 @@ export function createTerrain(scene) {
     }
 
     if (craterDepth > 0) {
-      // Darker, slightly warm-tinted crater interior
-      const t = craterDepth * 0.4;
-      colors[i * 3] = 0.53 - t * 0.15;
-      colors[i * 3 + 1] = 0.53 - t * 0.2;
-      colors[i * 3 + 2] = 0.53 - t * 0.22;
+      // Slightly darker crater interior — subtle difference only
+      const t = craterDepth * 0.2;
+      colors[i * 3] = 0.55 - t * 0.08;
+      colors[i * 3 + 1] = 0.55 - t * 0.1;
+      colors[i * 3 + 2] = 0.55 - t * 0.1;
     } else {
-      colors[i * 3] = 0.53;
-      colors[i * 3 + 1] = 0.53;
-      colors[i * 3 + 2] = 0.53;
+      colors[i * 3] = 0.55;
+      colors[i * 3 + 1] = 0.55;
+      colors[i * 3 + 2] = 0.55;
     }
   }
 

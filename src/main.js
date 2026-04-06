@@ -1,4 +1,7 @@
 import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { createTerrain, craters, rng } from './terrain.js';
 import { createSky } from './sky.js';
 import { createRover } from './rover.js';
@@ -19,6 +22,63 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setClearColor(0x000000);
 document.body.appendChild(renderer.domElement);
 
+// Post-processing — rover cam VHS shader
+const RoverCamShader = {
+  uniforms: {
+    tDiffuse: { value: null },
+    time: { value: 0 },
+    resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+  },
+  vertexShader: `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    uniform sampler2D tDiffuse;
+    uniform float time;
+    uniform vec2 resolution;
+    varying vec2 vUv;
+
+    float rand(vec2 co) {
+      return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
+    }
+
+    void main() {
+      vec2 uv = vUv;
+
+      // Chromatic aberration — subtle RGB split
+      float aberr = 0.0012;
+      float r = texture2D(tDiffuse, uv + vec2(aberr, 0.0)).r;
+      float g = texture2D(tDiffuse, uv).g;
+      float b = texture2D(tDiffuse, uv - vec2(aberr, 0.0)).b;
+      vec3 col = vec3(r, g, b);
+
+      // Scanlines — barely visible
+      float scanline = sin(uv.y * resolution.y * 1.5) * 0.5 + 0.5;
+      col *= 0.98 + 0.02 * scanline;
+
+      // Film grain — very subtle
+      float grain = rand(uv * resolution + time * 100.0) * 0.04;
+      col += grain - 0.02;
+
+      // Vignette — only at the very edges
+      float dist = length(uv - 0.5);
+      float vig = 1.0 - dist * dist * 0.3;
+      col *= vig;
+
+      // sRGB gamma correction (EffectComposer works in linear space)
+      col = pow(col, vec3(1.0 / 2.2));
+
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `,
+};
+
+const composer = new EffectComposer(renderer);
+
 // Scene
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x000000, 0.0015);
@@ -26,6 +86,12 @@ scene.fog = new THREE.FogExp2(0x000000, 0.0015);
 // Camera
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1500);
 camera.position.set(100, 60, -80);
+
+// Post-processing passes
+const renderPass = new RenderPass(scene, camera);
+composer.addPass(renderPass);
+const vhsPass = new ShaderPass(RoverCamShader);
+composer.addPass(vhsPass);
 
 // Lighting
 const SUN_DIR = new THREE.Vector3(1, 0.5, -0.3).normalize();
@@ -155,6 +221,8 @@ window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
+  vhsPass.uniforms.resolution.value.set(window.innerWidth, window.innerHeight);
 });
 
 // Shadow camera follows rover
@@ -171,7 +239,6 @@ const toolDriveEl = document.getElementById('tool-drive');
 const toolDrillEl = document.getElementById('tool-drill');
 const promptEl = document.getElementById('interaction-prompt');
 const promptTextEl = document.getElementById('prompt-text');
-const drillFillEl = document.getElementById('drill-fill');
 
 function updateMiningHUD(nearby) {
   // Tool indicator
@@ -180,22 +247,24 @@ function updateMiningHUD(nearby) {
   toolDrillEl.classList.toggle('active', tool === TOOLS.DRILL);
 
   // Interaction prompt
-  if (nearby && tool === TOOLS.DRILL) {
+  const drilling = mining.getDrilling();
+  if (drilling && nearby) {
     promptEl.classList.add('visible');
-    const progress = mining.getProgress();
-    if (progress > 0) {
-      promptTextEl.textContent = `Mining ${nearby.mineral.name}...`;
-    } else {
-      promptTextEl.textContent = `Hold E - Mine ${nearby.mineral.name} (${nearby.amount} left)`;
-    }
-    drillFillEl.style.width = (progress * 100) + '%';
+    promptTextEl.textContent = `Mining ${nearby.mineral.name}...`;
+  } else if (drilling && !nearby) {
+    promptEl.classList.add('visible');
+    promptTextEl.textContent = `Mining Moon Rock...`;
+  } else if (nearby && tool === TOOLS.DRILL) {
+    promptEl.classList.add('visible');
+    promptTextEl.textContent = `Hold E - Mine ${nearby.mineral.name} (${nearby.amount} left)`;
   } else if (nearby && tool === TOOLS.DRIVE) {
     promptEl.classList.add('visible');
     promptTextEl.textContent = `${nearby.mineral.name} deposit - Press 2 for drill`;
-    drillFillEl.style.width = '0%';
+  } else if (tool === TOOLS.DRILL) {
+    promptEl.classList.add('visible');
+    promptTextEl.textContent = `Hold E - Mine Moon Rock`;
   } else {
     promptEl.classList.remove('visible');
-    drillFillEl.style.width = '0%';
   }
 
   // Inventory counts
@@ -251,7 +320,8 @@ function animate() {
   }
 
   interpolatePlayers(dt);
-  renderer.render(scene, camera);
+  vhsPass.uniforms.time.value += dt;
+  composer.render();
 }
 
 animate();
