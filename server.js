@@ -26,6 +26,8 @@ const COLORS = [
 
 let colorIndex = 0;
 
+const MOON_RADIUS = 210; // slightly above surface so rover falls and snaps
+
 io.on('connection', (socket) => {
   console.log(`Player connected: ${socket.id}`);
 
@@ -33,12 +35,19 @@ io.on('connection', (socket) => {
     const color = COLORS[colorIndex % COLORS.length];
     colorIndex++;
 
+    // Random point on the sphere surface
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    const sx = Math.sin(phi) * Math.cos(theta);
+    const sy = Math.sin(phi) * Math.sin(theta);
+    const sz = Math.cos(phi);
+
     players[socket.id] = {
       id: socket.id,
       name: data.name || 'Anonymous',
       color,
-      position: { x: Math.random() * 40 - 20, y: 5, z: Math.random() * 40 - 20 },
-      rotation: { x: 0, y: Math.random() * Math.PI * 2, z: 0 },
+      position: { x: sx * MOON_RADIUS, y: sy * MOON_RADIUS, z: sz * MOON_RADIUS },
+      quaternion: { x: 0, y: 0, z: 0, w: 1 },
     };
 
     // Send current players to the new player
@@ -53,12 +62,12 @@ io.on('connection', (socket) => {
   socket.on('move', (data) => {
     if (!players[socket.id]) return;
     players[socket.id].position = data.position;
-    players[socket.id].rotation = data.rotation;
+    players[socket.id].quaternion = data.quaternion;
 
     socket.broadcast.emit('player-moved', {
       id: socket.id,
       position: data.position,
-      rotation: data.rotation,
+      quaternion: data.quaternion,
     });
   });
 

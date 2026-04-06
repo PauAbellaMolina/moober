@@ -44,6 +44,141 @@
       text-align: center;
     }
 
+    #battery-bar {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 160px;
+      height: 14px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+    }
+
+    #battery-fill {
+      height: 100%;
+      width: 100%;
+      background: #4ecdc4;
+      transition: width 0.3s, background-color 0.5s;
+      border-radius: 2px;
+    }
+
+    #battery-text {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      color: #fff;
+      font-size: 9px;
+      text-shadow: 0 0 3px #000;
+    }
+
+    #battery-label {
+      position: absolute;
+      bottom: 67px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #555;
+      font-size: 10px;
+      letter-spacing: 2px;
+    }
+
+    #attribution {
+      position: absolute;
+      bottom: 4px;
+      right: 10px;
+      color: #444;
+      font-size: 9px;
+      pointer-events: all;
+    }
+
+    #tool-hud {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      color: #aaa;
+      font-size: 12px;
+      text-align: right;
+    }
+
+    #tool-hud .tool-item {
+      padding: 3px 8px;
+      margin-bottom: 2px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 3px;
+    }
+
+    #tool-hud .tool-item.active {
+      color: #fff;
+      border-color: rgba(100,180,255,0.5);
+      background: rgba(100,180,255,0.1);
+    }
+
+    #inventory-hud {
+      position: absolute;
+      top: 80px;
+      right: 20px;
+      color: #888;
+      font-size: 11px;
+      text-align: right;
+    }
+
+    #inventory-hud .mineral-row {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-bottom: 2px;
+    }
+
+    .mineral-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .mineral-count {
+      min-width: 16px;
+      text-align: right;
+      color: #aaa;
+    }
+
+    #interaction-prompt {
+      position: absolute;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #fff;
+      font-size: 14px;
+      text-align: center;
+      text-shadow: 0 0 10px rgba(0,0,0,0.8);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    #interaction-prompt.visible { opacity: 1; }
+
+    #drill-progress {
+      width: 120px;
+      height: 4px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 2px;
+      margin: 8px auto 0;
+      overflow: hidden;
+    }
+
+    #drill-fill {
+      height: 100%;
+      width: 0%;
+      background: #ffcc33;
+      border-radius: 2px;
+      transition: width 0.05s linear;
+    }
+
     #join-modal {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -114,7 +249,22 @@
     <div id="hud-top-left">
       <div id="player-count">connecting...</div>
     </div>
-    <div id="hud-controls">WASD or Arrow Keys to drive &bull; Space to brake</div>
+    <div id="tool-hud">
+      <div class="tool-item active" id="tool-drive">1: DRIVE</div>
+      <div class="tool-item" id="tool-drill">2: DRILL</div>
+    </div>
+    <div id="inventory-hud"></div>
+    <div id="interaction-prompt">
+      <div id="prompt-text"></div>
+      <div id="drill-progress"><div id="drill-fill"></div></div>
+    </div>
+    <div id="battery-label">BATTERY</div>
+    <div id="battery-bar">
+      <div id="battery-fill"></div>
+      <div id="battery-text">100%</div>
+    </div>
+    <div id="hud-controls">WASD drive &bull; Space brake &bull; H lights &bull; 1/2 tools &bull; E mine</div>
+    <div id="attribution">Models: <a href="https://poly.pizza/m/dhLVA8z7cGo" target="_blank" style="color:#555">Space rover</a>, <a href="https://poly.pizza/m/1I5ip-3VOfv" target="_blank" style="color:#555">Earth</a> by Poly by Google <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" style="color:#555">CC-BY</a> via Poly Pizza</div>
   </div>
 
   <div id="join-modal">

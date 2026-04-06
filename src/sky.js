@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 export function createSky(scene) {
   // Procedural starfield
@@ -8,7 +9,6 @@ export function createSky(scene) {
   const sizes = new Float32Array(starCount);
 
   for (let i = 0; i < starCount; i++) {
-    // Random point on a sphere
     const theta = Math.random() * Math.PI * 2;
     const phi = Math.acos(2 * Math.random() - 1);
     const r = 800;
@@ -31,41 +31,46 @@ export function createSky(scene) {
   const stars = new THREE.Points(starGeo, starMat);
   scene.add(stars);
 
-  // Earth
-  const earthGeo = new THREE.SphereGeometry(20, 32, 32);
-  const earthMat = new THREE.MeshBasicMaterial({
-    color: 0x4488cc,
-  });
-  const earth = new THREE.Mesh(earthGeo, earthMat);
-  earth.position.set(200, 280, -400);
-  scene.add(earth);
+  // Sun — bright yellow spot
+  const sunDir = new THREE.Vector3(1, 0.5, -0.3).normalize();
+  const sunPos = sunDir.clone().multiplyScalar(700);
 
-  // Earth glow (atmosphere halo)
-  const glowGeo = new THREE.SphereGeometry(22, 32, 32);
-  const glowMat = new THREE.MeshBasicMaterial({
-    color: 0x88bbff,
-    transparent: true,
-    opacity: 0.15,
-  });
-  const glow = new THREE.Mesh(glowGeo, glowMat);
-  glow.position.copy(earth.position);
-  scene.add(glow);
+  const sunGeo = new THREE.SphereGeometry(8, 32, 32);
+  const sunMat = new THREE.MeshBasicMaterial({ color: 0xffee55 });
+  const sun = new THREE.Mesh(sunGeo, sunMat);
+  sun.position.copy(sunPos);
+  scene.add(sun);
 
-  // Add some "continent" patches using a second sphere with vertex displacement
-  const landGeo = new THREE.SphereGeometry(20.1, 32, 32);
-  const landMat = new THREE.MeshBasicMaterial({
-    color: 0x44aa55,
-    transparent: true,
-    opacity: 0.5,
+  // --- Earth (GLB model) ---
+  const earthPos = new THREE.Vector3(200, 280, -400);
+  const earthRadius = 20;
+  const earthScale = 0.06; // model is ~660 units across, scale to ~40 diameter
+
+  let earthModel = null;
+  const gltfLoader = new GLTFLoader();
+  gltfLoader.load('/models/earth.glb', (gltf) => {
+    earthModel = gltf.scene;
+    earthModel.scale.setScalar(earthScale);
+    // Center the model (raw Y center is ~380, X/Z roughly centered)
+    earthModel.position.copy(earthPos);
+    earthModel.traverse((child) => {
+      if (child.isMesh) {
+        child.material = child.material.clone();
+        child.material.emissive = new THREE.Color(0x112233);
+        child.material.emissiveIntensity = 0.3;
+      }
+    });
+    scene.add(earthModel);
   });
-  const land = new THREE.Mesh(landGeo, landMat);
-  land.position.copy(earth.position);
-  scene.add(land);
+
+  // Soft point light near Earth for ambient earthshine feel
+  const earthLight = new THREE.PointLight(0x6699cc, 0.4, 120);
+  earthLight.position.copy(earthPos);
+  scene.add(earthLight);
 
   return {
     update(dt) {
-      earth.rotation.y += dt * 0.02;
-      land.rotation.y += dt * 0.02;
+      if (earthModel) earthModel.rotation.y += dt * 0.02;
     },
   };
 }

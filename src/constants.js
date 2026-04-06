@@ -1,7 +1,6 @@
-export const TERRAIN_SIZE = 500;
-export const TERRAIN_SEGMENTS = 256;
+export const MOON_RADIUS = 267;
 export const TERRAIN_SEED = 42;
-export const GRAVITY = 1.6;
+export const GRAVITY = 12;
 export const ROVER_MAX_SPEED = 20;
 export const ROVER_ACCELERATION = 8;
 export const ROVER_TURN_SPEED = 2.0;
@@ -12,3 +11,7 @@ export const CRATER_COUNT = 30;
 export const CAMERA_FOLLOW_DISTANCE = 14;
 export const CAMERA_HEIGHT = 7;
 export const CAMERA_DAMPING = 3.0;
+export const MINING_RANGE = 4;
+export const MINING_DURATION = 2.5;
+export const MINING_BATTERY_DRAIN = 8;
+export const DEPOSITS_PER_CRATER_MAX = 3;
